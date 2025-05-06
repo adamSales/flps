@@ -121,5 +121,19 @@ model {
   }
 
 }
+generated quantities{
+  vector[nfac] meanFsc;
+  vector<lower=0>[nfac] sigFsc;
+  vector[nfac] fscScale[nstud];       // person scores for each factor
+  real tau0Scale;
+  vector[nfac] tau1Scale;
+
+
+  for(i in 1:nstud) fscScale[i]=(fsc[i]-meanFsc)/sigFsc;
+
+  tau0Scale=tau0+tau1*meanFsc;
+  tau1Scale=tau1*sigFsc;
+}
+   
  
 //lastline
