@@ -121,19 +121,49 @@ model {
   }
 
 }
-generated quantities{
+
+//generated quantities{
+  //vector[nfac] meanFsc;
+  //vector<lower=0>[nfac] sigFsc;
+  //vector[nfac] fscScale[nstud];       // person scores for each factor
+  //real tau0Scale;
+  //vector[nfac] tau1Scale;
+
+
+  //for(i in 1:nstud) fscScale[i]=(fsc[i]-meanFsc)/sigFsc;
+
+  //tau0Scale=tau0+tau1*meanFsc;
+  //tau1Scale=tau1*sigFsc;
+//}
+
+generated quantities {
   vector[nfac] meanFsc;
   vector<lower=0>[nfac] sigFsc;
-  vector[nfac] fscScale[nstud];       // person scores for each factor
+  array[nstud] vector[nfac] fscScale;
   real tau0Scale;
   vector[nfac] tau1Scale;
 
+  meanFsc = rep_vector(0, nfac);
+  sigFsc = rep_vector(0, nfac);
 
-  for(i in 1:nstud) fscScale[i]=(fsc[i]-meanFsc)/sigFsc;
+  // Compute mean
+  for (i in 1:nstud)
+    meanFsc += fsc[i];
+  meanFsc /= nstud;
 
-  tau0Scale=tau0+tau1*meanFsc;
-  tau1Scale=tau1*sigFsc;
+  // Compute std dev
+  for (i in 1:nstud)
+    sigFsc += square(fsc[i] - meanFsc);
+  sigFsc = sqrt(sigFsc / (nstud - 1));  // sample std deviation
+
+  // Standardized scores
+  for (i in 1:nstud)
+    fscScale[i] = (fsc[i] - meanFsc) ./ sigFsc;
+
+  // Scaled treatment effects
+  tau0Scale = tau0 + dot_product(tau1, meanFsc);
+  tau1Scale = tau1 .* sigFsc;
 }
-   
+
  
 //lastline
